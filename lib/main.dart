@@ -1,122 +1,239 @@
+import 'package:budget_buddy/AddTransactionScreen.dart';
+import 'package:budget_buddy/OptionScreen.dart';
 import 'package:flutter/material.dart';
-
-void main() {
-  runApp(const MyApp());
-}
 
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
 
-  // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Flutter Demo',
-      theme: ThemeData(
-        // This is the theme of your application.
-        //
-        // TRY THIS: Try running your application with "flutter run". You'll see
-        // the application has a purple toolbar. Then, without quitting the app,
-        // try changing the seedColor in the colorScheme below to Colors.green
-        // and then invoke "hot reload" (save your changes or press the "hot
-        // reload" button in a Flutter-supported IDE, or press "r" if you used
-        // the command line to start the app).
-        //
-        // Notice that the counter didn't reset back to zero; the application
-        // state is not lost during the reload. To reset the state, use hot
-        // restart instead.
-        //
-        // This works for code too, not just values: Most code changes can be
-        // tested with just a hot reload.
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
-      ),
-      home: const MyHomePage(title: 'Flutter Demo Home Page'),
+    const String appTitle = 'Budget App';
+    return MaterialApp(title: appTitle, home: MainPage());
+  }
+}
+
+class MainPage extends StatefulWidget {
+  const MainPage({super.key});
+
+  @override
+  State<MainPage> createState() {
+    return new _MainPageState();
+  }
+}
+
+/*
+
+    Hardcoded Data:
+      - runningBalance: 5000.0 (double) | manually entered at start
+      - monthlyIncome: 3000.0 (double) | manually entered
+      - transactions: [
+            {date: 10/3/2025, amount: -250.0},
+            {date: 10/3/2025, amount: -1000.0}, 
+            {date: 10/3/2025, amount: 500.0}
+          ] (List<String>)
+      - currentSavings: 1000.0 (double)
+      - savingsPerMonth: 500.0 (double)
+*/
+
+class _MainPageState extends State<MainPage> {
+  double _runningBalance = 4250.0; // (double) | manually entered at start
+  double _monthlyIncome = 3000.0; // (double) | manually entered
+  List<Map<String, dynamic>> _transactions = [
+    {"date": "10/3/2025", "amount": -250.0, "balanceStamp": 4250.0},
+    {"date": "10/3/2025", "amount": -1000.0, "balanceStamp": 4500.0},
+    {"date": "10/3/2025", "amount": 500.0, "balanceStamp": 5500.0},
+  ]; //  (List<String>)
+  double _currentSavings = 1000.0; //  (double)
+  double _savingsPerMonth = 500.0; // (double)
+
+  int _currentIndex = 0;
+
+  /*
+    Add transaction will append to our list of transactions
+    It will also decrement and incremenet our runningBalance
+  */
+  void _navigateToAddTransactionScreen() async {
+    Map<String, dynamic>? response = await Navigator.of(context).push(
+      MaterialPageRoute(builder: (context) => const AddTransactionScreen()),
     );
-  }
-}
 
-class MyHomePage extends StatefulWidget {
-  const MyHomePage({super.key, required this.title});
+    if (response == null) {
+      return;
+    }
 
-  // This widget is the home page of your application. It is stateful, meaning
-  // that it has a State object (defined below) that contains fields that affect
-  // how it looks.
+    try {
+      final newTransaction = Map<String, dynamic>.from(response);
+      final double amount = newTransaction["amount"];
+      newTransaction["balanceStamp"] = (_runningBalance + amount);
 
-  // This class is the configuration for the state. It holds the values (in this
-  // case the title) provided by the parent (in this case the App widget) and
-  // used by the build method of the State. Fields in a Widget subclass are
-  // always marked "final".
-
-  final String title;
-
-  @override
-  State<MyHomePage> createState() => _MyHomePageState();
-}
-
-class _MyHomePageState extends State<MyHomePage> {
-  int _counter = 0;
-
-  void _incrementCounter() {
-    setState(() {
-      // This call to setState tells the Flutter framework that something has
-      // changed in this State, which causes it to rerun the build method below
-      // so that the display can reflect the updated values. If we changed
-      // _counter without calling setState(), then the build method would not be
-      // called again, and so nothing would appear to happen.
-      _counter++;
-    });
+      setState(() {
+        _transactions.insert(0, newTransaction);
+        _runningBalance +=
+            newTransaction["amount"]; // if amount is negative, it will subtract, if positive, it will add
+      });
+    } catch (e) {
+      throw Error();
+    }
   }
 
-  @override
-  Widget build(BuildContext context) {
-    // This method is rerun every time setState is called, for instance as done
-    // by the _incrementCounter method above.
-    //
-    // The Flutter framework has been optimized to make rerunning build methods
-    // fast, so that you can just rebuild anything that needs updating rather
-    // than having to individually change instances of widgets.
-    return Scaffold(
-      appBar: AppBar(
-        // TRY THIS: Try changing the color here to a specific color (to
-        // Colors.amber, perhaps?) and trigger a hot reload to see the AppBar
-        // change color while the other colors stay the same.
-        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
-        // Here we take the value from the MyHomePage object that was created by
-        // the App.build method, and use it to set our appbar title.
-        title: Text(widget.title),
-      ),
-      body: Center(
-        // Center is a layout widget. It takes a single child and positions it
-        // in the middle of the parent.
-        child: Column(
-          // Column is also a layout widget. It takes a list of children and
-          // arranges them vertically. By default, it sizes itself to fit its
-          // children horizontally, and tries to be as tall as its parent.
-          //
-          // Column has various properties to control how it sizes itself and
-          // how it positions its children. Here we use mainAxisAlignment to
-          // center the children vertically; the main axis here is the vertical
-          // axis because Columns are vertical (the cross axis would be
-          // horizontal).
-          //
-          // TRY THIS: Invoke "debug painting" (choose the "Toggle Debug Paint"
-          // action in the IDE, or press "p" in the console), to see the
-          // wireframe for each widget.
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: <Widget>[
-            const Text('You have pushed the button this many times:'),
-            Text(
-              '$_counter',
-              style: Theme.of(context).textTheme.headlineMedium,
-            ),
-          ],
+  void _navigateToOptionScreen() async {
+    Map<String, dynamic>? response = await Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (context) => OptionScreen(
+          monthlyIncome: _monthlyIncome,
+          savingsPerMonth: _savingsPerMonth,
         ),
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: _incrementCounter,
-        tooltip: 'Increment',
-        child: const Icon(Icons.add),
-      ), // This trailing comma makes auto-formatting nicer for build methods.
+    );
+
+    if (response == null) {
+      return;
+    }
+
+    try {
+      setState(() {
+        _monthlyIncome = response["monthlyIncome"];
+        _savingsPerMonth = response["savingPerMonth"];
+        _currentIndex = 0;
+      });
+    } catch (e) {
+      throw Error();
+    }
+  }
+
+  void _updateIndex(int index) {
+    if (index == 1) {
+      setState(() {
+        _currentIndex = index;
+      });
+
+      _navigateToOptionScreen();
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    const String appTitle = 'Budget App';
+    return new Scaffold(
+      appBar: new AppBar(title: const Text(appTitle)),
+      body: Center(
+        child: new Container(
+          padding: const EdgeInsets.all(20.0),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: <Widget>[
+              Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: <Widget>[
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      const Text(
+                        'Current Balance',
+                        style: TextStyle(fontSize: 20),
+                      ),
+                      const SizedBox(
+                        width: 20,
+                      ), // This should display our current balance/savings
+                      const Text(
+                        'Monthly Income',
+                        style: TextStyle(fontSize: 20),
+                      ),
+                      const SizedBox(height: 20),
+                    ],
+                  ),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text(_runningBalance.toStringAsFixed(2)),
+                      const SizedBox(
+                        width: 20,
+                      ), // This should display our current balance/savings
+                      Text(_monthlyIncome.toStringAsFixed(2)),
+                      const SizedBox(height: 20),
+                    ],
+                  ),
+                ],
+              ),
+              Padding(
+                padding: const EdgeInsets.only(top: 50.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        const Text(
+                          'Transactions',
+                          style: TextStyle(fontSize: 20),
+                        ),
+                        SizedBox(width: 50),
+                        ElevatedButton(
+                          onPressed: () {
+                            _navigateToAddTransactionScreen();
+                          },
+                          child: const Text('Add Transaction'),
+                        ),
+                      ],
+                    ),
+                    _transactions.isEmpty
+                        ? const Text('No Transactions')
+                        : ListView.builder(
+                            shrinkWrap: true,
+                            physics: const NeverScrollableScrollPhysics(),
+                            itemCount: _transactions.length,
+                            itemBuilder: (context, index) {
+                              final transaction = _transactions[index];
+                              return ListTile(
+                                title: Text(transaction['date'].toString()),
+                                subtitle: Row(
+                                  children: [
+                                    Text(
+                                      'Amount: ${transaction['amount'].toStringAsFixed(2)}',
+                                      style: TextStyle(
+                                        color: transaction['amount'] < 0
+                                            ? Colors.red
+                                            : Colors.green,
+                                      ),
+                                    ),
+                                    SizedBox(width: 10),
+                                    Text(
+                                      'Balance: ${transaction['balanceStamp'].toStringAsFixed(2)}',
+                                    ),
+                                  ],
+                                ),
+                              );
+                            },
+                          ),
+                    // This should display all of our transactions | Listview Builder
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+      bottomNavigationBar: BottomNavigationBar(
+        items: const <BottomNavigationBarItem>[
+          BottomNavigationBarItem(
+            icon: Icon(Icons.home),
+            label: 'Home',
+          ), // index 0
+          BottomNavigationBarItem(
+            icon: Icon(Icons.settings),
+            label: 'Options',
+          ), // index 1
+        ],
+        // Add onTap handler and currentIndex for interactivity
+        currentIndex: _currentIndex,
+        onTap: _updateIndex,
+      ),
     );
   }
 }
+
+/*
+  We render the MyApp element which surrounds
+  MainPage with a MaterialApp widget
+  This allows us to use Navigation FROM the MainPage.
+*/
+void main() => runApp(const MyApp());
